@@ -203,4 +203,41 @@ void setup() {
 
 void loop() {
   server.handleClient();
-} ARDUINO OR ESP32 ME PWM ME KYA FARK HE  
+} 
+
+==== ab ye ARDUINO ME KESE KRENGE YHA DEKHLO ARDUINO ME PWM KHUD SE CONTOL NI KR SKTE 
+
+// -------- LED PIN --------
+#define LED_PIN 2  // PWM pin
+
+// -------- BRIGHTNESS --------
+int brightness = 0;
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+
+  // ---------- DIM ----------
+  // LED ko dheere jala rahe hain
+  for (brightness = 0; brightness <= 255; brightness++) {
+    analogWrite(LED_PIN, brightness); // PWM
+    delay(10);
+  }
+
+  delay(1000);
+
+  // ---------- HIGH ----------
+  analogWrite(LED_PIN, 255); // full brightness
+  delay(2000);
+
+  // ---------- DIM DOWN ----------
+  for (brightness = 255; brightness >= 0; brightness--) {
+    analogWrite(LED_PIN, brightness);
+    delay(10);
+  }
+
+  delay(1000);
+}
+
