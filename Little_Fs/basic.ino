@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "LittleFS.h"
-.
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -42,6 +42,7 @@ void setup() {
 
 void loop() {
 }
+
 
 
 
