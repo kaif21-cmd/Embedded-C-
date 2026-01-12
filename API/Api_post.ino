@@ -1,4 +1,4 @@
-#include <WiFi.h> // wifi se connect krne ke liye 
+#include <WiFi.h> // wifi se connect krne ke liye
 #include <HTTPClient.h> //rek or response handel krne ke liye 
 #include <ArduinoJson.h> // JSON data banane aur send karne ke liye
 
@@ -59,3 +59,4 @@ void loop() {
 
   delay(5000);
 }
+
