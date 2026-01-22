@@ -171,6 +171,12 @@ h3{color:#93c5fd}
 <input name="tx" placeholder="X"><input name="ty" placeholder="Y">
 </div>
 
+<h3>REMOVE TEXT</h3>
+<div class="grid">
+  <input name="tremove" placeholder="Text ID (0-19)">
+  <button type="button" onclick="removeText()" class="red">REMOVE TEXT</button>
+</div>
+
 <h3>ADD / UPDATE LINE</h3>
 <input name="lid" placeholder="Line ID (0-19)">
 <div class="grid">
@@ -190,16 +196,13 @@ h3{color:#93c5fd}
 <input name="vgap" placeholder="Gap">
 <input name="vcount" placeholder="Count">
 
-<h3>REMOVE TEXT</h3>
-<input name="tremove" placeholder="Text ID (0-19)">
-
 <h3>REMOVE LINE</h3>
 <div class="grid">
   <input name="lremove" placeholder="Line ID (0-19)">
-  <button type="submit" name="action" value="removeLine" class="red">REMOVE LINE</button>
+  <button type="button" onclick="removeLine()" class="red">REMOVE LINE</button>
 </div>
 
-<button type="submit" name="action" value="save">SAVE MATRIX</button>
+<button type="submit">SAVE MATRIX</button>
 <p id="status" style="color:lime"></p>
 
 </form>
@@ -209,8 +212,26 @@ document.getElementById("matrixForm").addEventListener("submit", function(e){
   e.preventDefault();
   const fd = new FormData(this);
   fetch("/set",{method:"POST",body:fd})
-  .then(()=>{document.getElementById("status").innerHTML=" Matrix Updated";});
+  .then(()=>{document.getElementById("status").innerHTML="✅ Saved";});
 });
+
+function removeLine(){
+  const fd = new FormData();
+  fd.append("action","removeLine");
+  fd.append("lremove", document.querySelector('input[name="lremove"]').value);
+
+  fetch("/set",{method:"POST",body:fd})
+  .then(()=>{document.getElementById("status").innerHTML="🟥 Line Removed";});
+}
+
+function removeText(){
+  const fd = new FormData();
+  fd.append("action","removeText");
+  fd.append("tremove", document.querySelector('input[name="tremove"]').value);
+
+  fetch("/set",{method:"POST",body:fd})
+  .then(()=>{document.getElementById("status").innerHTML="🟥 Text Removed";});
+}
 </script>
 
 </div></body></html>
@@ -222,66 +243,65 @@ void handleRoot(){ server.send(200,"text/html",htmlPage); }
 void handleSet(){
 
   String action = "save";
-  if(server.hasArg("action")){
-    action = server.arg("action");
+  if(server.hasArg("action")) action = server.arg("action");
+
+  // REMOVE LINE
+  if(action=="removeLine" && server.hasArg("lremove")){
+    int id=server.arg("lremove").toInt();
+    if(id>=0 && id<MAX_LINES) lines[id].enable=false;
+    saveEEPROM(); drawDashboard(); server.send(200,"text/plain","OK"); return;
   }
 
+  // REMOVE TEXT
+  if(action=="removeText" && server.hasArg("tremove")){
+    int id=server.arg("tremove").toInt();
+    if(id>=0 && id<MAX_TEXT) texts[id].enable=false;
+    saveEEPROM(); drawDashboard(); server.send(200,"text/plain","OK"); return;
+  }
+
+  // BRIGHTNESS
   if(server.hasArg("brightness")){
     brightnessValue = constrain(server.arg("brightness").toInt(),1,255);
     dmd.setBrightness(brightnessValue);
   }
 
-  // TEXT
+  // TEXT SAVE
   if(server.hasArg("tid")){
-    int id = server.arg("tid").toInt();
+    int id=server.arg("tid").toInt();
     if(id>=0 && id<MAX_TEXT){
       server.arg("text").toCharArray(texts[id].text,30);
-      texts[id].x = server.arg("tx").toInt();
-      texts[id].y = server.arg("ty").toInt();
-      texts[id].enable = true;
+      texts[id].x=server.arg("tx").toInt();
+      texts[id].y=server.arg("ty").toInt();
+      texts[id].enable=true;
     }
   }
 
-  // LINE
+  // LINE SAVE
   if(server.hasArg("lid")){
-    int id = server.arg("lid").toInt();
+    int id=server.arg("lid").toInt();
     if(id>=0 && id<MAX_LINES){
-      lines[id].x1 = server.arg("x1").toInt();
-      lines[id].y1 = server.arg("y1").toInt();
-      lines[id].x2 = server.arg("x2").toInt();
-      lines[id].y2 = server.arg("y2").toInt();
-      lines[id].enable = true;
+      lines[id].x1=server.arg("x1").toInt();
+      lines[id].y1=server.arg("y1").toInt();
+      lines[id].x2=server.arg("x2").toInt();
+      lines[id].y2=server.arg("y2").toInt();
+      lines[id].enable=true;
     }
   }
 
-  // SAFE GAP UPDATE
-  if(server.hasArg("hen")) hGapEnable = server.arg("hen").toInt();
-  if(server.hasArg("hstart")) h_startY = server.arg("hstart").toInt();
-  if(server.hasArg("hgap")) h_gap = server.arg("hgap").toInt();
-  if(server.hasArg("hcount")) h_count = server.arg("hcount").toInt();
+  // GAP H
+  if(server.hasArg("hen")) hGapEnable=server.arg("hen").toInt();
+  if(server.hasArg("hstart")) h_startY=server.arg("hstart").toInt();
+  if(server.hasArg("hgap")) h_gap=server.arg("hgap").toInt();
+  if(server.hasArg("hcount")) h_count=server.arg("hcount").toInt();
 
-  if(server.hasArg("ven")) vGapEnable = server.arg("ven").toInt();
-  if(server.hasArg("vstart")) v_startX = server.arg("vstart").toInt();
-  if(server.hasArg("vgap")) v_gap = server.arg("vgap").toInt();
-  if(server.hasArg("vcount")) v_count = server.arg("vcount").toInt();
-
-  // REMOVE TEXT
-  if(server.hasArg("tremove")){
-    int id = server.arg("tremove").toInt();
-    if(id>=0 && id<MAX_TEXT) texts[id].enable=false;
-  }
-
-  // REMOVE LINE (ONLY WHEN BUTTON PRESSED)
-  if(action == "removeLine" && server.hasArg("lremove")){
-    int id = server.arg("lremove").toInt();
-    if(id>=0 && id<MAX_LINES){
-      lines[id].enable = false;
-    }
-  }
+  // GAP V
+  if(server.hasArg("ven")) vGapEnable=server.arg("ven").toInt();
+  if(server.hasArg("vstart")) v_startX=server.arg("vstart").toInt();
+  if(server.hasArg("vgap")) v_gap=server.arg("vgap").toInt();
+  if(server.hasArg("vcount")) v_count=server.arg("vcount").toInt();
 
   saveEEPROM();
   drawDashboard();
-
   server.send(200,"text/plain","OK");
 }
 
@@ -295,6 +315,11 @@ void setup(){
   while(WiFi.status()!=WL_CONNECTED) delay(300);
 
   ArduinoOTA.begin();
+
+  // CLEAR MEMORY FIRST
+  for(int i=0;i<MAX_LINES;i++) lines[i].enable=false;
+  for(int i=0;i<MAX_TEXT;i++) texts[i].enable=false;
+
   loadEEPROM();
   dmd.setBrightness(brightnessValue);
 
