@@ -3,7 +3,7 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <ArduinoOTA.h>
-#include <EEPROM.h>
+#include <EEPROM.h>/
 
 /******************** DISPLAY CONFIG ********************/
 #define DISPLAYS_ACROSS 6
