@@ -209,7 +209,7 @@ document.getElementById("matrixForm").addEventListener("submit", function(e){
   e.preventDefault();
   const fd = new FormData(this);
   fetch("/set",{method:"POST",body:fd})
-  .then(()=>{document.getElementById("status").innerHTML="✅ Matrix Updated";});
+  .then(()=>{document.getElementById("status").innerHTML=" Matrix Updated";});
 });
 </script>
 
