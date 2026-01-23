@@ -143,6 +143,24 @@ void loadEEPROM(){
   EEPROM.get(a,v_count); a+=sizeof(int);
 }
 
+/******************** CLEAR ALL SYSTEM ********************/
+void clearAllData() {
+
+  for(int i=0;i<MAX_TEXT;i++)  texts[i].enable = false;
+  for(int i=0;i<MAX_LINES;i++) lines[i].enable = false;
+
+  hGapEnable = false;
+  vGapEnable = false;
+
+  brightnessValue = 40;
+  dmd.setBrightness(brightnessValue);
+
+  for(int i=0;i<EEPROM_SIZE;i++) EEPROM.write(i, 0);
+  EEPROM.commit();
+
+  drawDashboard();
+}
+
 /******************** WEB PAGE ********************/
 const char* htmlPage = R"rawliteral(
 <!DOCTYPE html><html><head><title>DMD MATRIX DESIGNER</title>
@@ -202,6 +220,11 @@ h3{color:#93c5fd}
   <button type="button" onclick="removeLine()" class="red">REMOVE LINE</button>
 </div>
 
+<h3>FULL RESET</h3>
+<button type="button" onclick="clearAll()" style="background:#dc2626;color:white">
+  🧹 CLEAR ALL (FRESH)
+</button>
+
 <button type="submit">SAVE MATRIX</button>
 <p id="status" style="color:lime"></p>
 
@@ -232,6 +255,18 @@ function removeText(){
   fetch("/set",{method:"POST",body:fd})
   .then(()=>{document.getElementById("status").innerHTML="🟥 Text Removed";});
 }
+
+function clearAll(){
+  if(!confirm("Are you sure? This will remove EVERYTHING!")) return;
+
+  const fd = new FormData();
+  fd.append("action","clearAll");
+
+  fetch("/set",{method:"POST",body:fd})
+  .then(()=>{
+    document.getElementById("status").innerHTML="🧹 All Cleared - Fresh Matrix";
+  });
+}
 </script>
 
 </div></body></html>
@@ -244,6 +279,13 @@ void handleSet(){
 
   String action = "save";
   if(server.hasArg("action")) action = server.arg("action");
+
+  // CLEAR ALL
+  if(action=="clearAll"){
+    clearAllData();
+    server.send(200,"text/plain","CLEARED");
+    return;
+  }
 
   // REMOVE LINE
   if(action=="removeLine" && server.hasArg("lremove")){
@@ -316,7 +358,6 @@ void setup(){
 
   ArduinoOTA.begin();
 
-  // CLEAR MEMORY FIRST
   for(int i=0;i<MAX_LINES;i++) lines[i].enable=false;
   for(int i=0;i<MAX_TEXT;i++) texts[i].enable=false;
 
