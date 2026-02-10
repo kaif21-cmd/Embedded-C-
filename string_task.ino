@@ -1,4 +1,4 @@
-void setup() {
+void setup() {...
   Serial.begin(9600);
   Serial.println("Use format:");
   Serial.println("DATE:DD:MM:YYYY");
